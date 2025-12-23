@@ -80,6 +80,30 @@ export class VlibeBaseDatabase {
   }
 
   /**
+   * Get the full table name with unique project prefix
+   * Uses the unique timestamp portion of the project ID to avoid collisions
+   */
+  private getFullTableName(tableName: string): string {
+    // Extract the unique timestamp portion (last part after the last dash)
+    const parts = this.projectId.split('-');
+    const lastPart = parts[parts.length - 1];
+
+    // If the last part is numeric (timestamp), use it; otherwise fallback
+    let prefix: string;
+    if (/^\d+$/.test(lastPart) && lastPart.length >= 8) {
+      prefix = lastPart.slice(0, 8);
+    } else {
+      prefix = this.projectId
+        .replace(/^(vlibe-brief-|proj-|project-)/, '')
+        .slice(0, 8)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+    }
+
+    return `proj_${prefix}_${tableName.toLowerCase().replace(/[^a-z0-9_]/g, '')}`;
+  }
+
+  /**
    * Initialize Supabase client for real-time subscriptions
    */
   private initSupabase(): void {
@@ -323,7 +347,7 @@ export class VlibeBaseDatabase {
     this.initSupabase();
 
     const channelName = `base:${this.projectId}:${collection}`;
-    const tableName = `project_${this.projectId.replace(/-/g, '_')}_${collection}`;
+    const tableName = this.getFullTableName(collection);
 
     const channel = this.supabase!.channel(channelName)
       .on(
