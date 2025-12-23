@@ -1,0 +1,73 @@
+{
+  "name": "@withvlibe/base-sdk",
+  "version": "1.0.0",
+  "description": "SDK for Vlibe Base Apps - includes authentication, database, payments with transaction fees, and category-specific helpers for websites, SaaS, and e-commerce",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.mjs",
+      "require": "./dist/react.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/react.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts src/react.ts --format cjs,esm --dts --watch",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "vlibe",
+    "base",
+    "sdk",
+    "database",
+    "authentication",
+    "payments",
+    "stripe",
+    "website",
+    "saas",
+    "ecommerce",
+    "react",
+    "hooks"
+  ],
+  "author": "Vlibe <dev@vlibe.app>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/withvlibe/base-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/withvlibe/base-sdk/issues"
+  },
+  "homepage": "https://github.com/withvlibe/base-sdk#readme",
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "eslint": "^9.17.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.2"
+  }
+}
