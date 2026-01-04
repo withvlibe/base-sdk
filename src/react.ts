@@ -42,6 +42,9 @@
 export { useCollection } from './hooks/useCollection';
 export { useKV } from './hooks/useKV';
 export { useAuth } from './hooks/useAuth';
+export { useProducts } from './hooks/useProducts';
+export { useCart } from './hooks/useCart';
+export { useOrders } from './hooks/useOrders';
 
 // Re-export types for convenience
 export type {
@@ -52,4 +55,14 @@ export type {
   UsePaymentsReturn,
   BaseRecord,
   VlibeUser,
+  Product,
+  Order,
+  CartItem,
+  CreateProductInput,
+  CreateOrderInput,
 } from './types';
+
+// E-commerce hook return types
+export type { UseProductsReturn, UseProductsOptions } from './hooks/useProducts';
+export type { UseCartReturn } from './hooks/useCart';
+export type { UseOrdersReturn, UseOrdersOptions } from './hooks/useOrders';

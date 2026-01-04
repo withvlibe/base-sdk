@@ -53,6 +53,7 @@
 export { VlibeBaseDatabase } from './VlibeBaseDatabase';
 export { VlibeBaseAuth } from './VlibeBaseAuth';
 export { VlibeBasePayments } from './VlibeBasePayments';
+export { VlibeBaseEcommerce } from './VlibeBaseEcommerce';
 
 // All types
 export type {
@@ -92,6 +93,15 @@ export type {
   OrderItem,
   Address,
   CartItem,
+  // E-commerce input types
+  CreateProductInput,
+  CreateOrderInput,
+  // E-commerce calculation types
+  OrderCalculation,
+  // E-commerce analytics types
+  RevenueStats,
+  ProductStats,
+  OrderStats,
   // API types
   ApiResponse,
   PaginatedResponse,

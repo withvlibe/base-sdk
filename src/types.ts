@@ -9,7 +9,7 @@
 /**
  * App category for Vlibe Base apps
  */
-export type AppCategory = 'website' | 'saas' | 'ecommerce';
+export type AppCategory = 'website' | 'saas' | 'ecommerce' | 'other';
 
 /**
  * Vlibe Base plan type
@@ -308,9 +308,15 @@ export interface Order {
   items: OrderItem[];
   subtotal: number;
   tax: number;
+  shipping: number;
   total: number;
   shippingAddress?: Address;
+  billingAddress?: Address;
+  paymentMethodId?: string;
+  stripePaymentIntentId?: string;
+  notes?: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface OrderItem {
@@ -332,6 +338,76 @@ export interface Address {
 export interface CartItem {
   productId: string;
   quantity: number;
+}
+
+// E-commerce Input Types
+export interface CreateProductInput {
+  name: string;
+  description?: string;
+  sku?: string; // Auto-generated if not provided
+  price: number; // In cents
+  currency: string; // 'usd', 'eur', etc.
+  images?: string[];
+  stock: number;
+  isActive?: boolean; // Default true
+  category?: string;
+  metadata?: Record<string, any>; // Flexible field for custom data
+}
+
+export interface CreateOrderInput {
+  userId: string;
+  items: Array<{ productId: string; quantity: number }>;
+  shippingAddress: Address;
+  billingAddress?: Address;
+  paymentMethodId?: string; // Stripe payment method
+  notes?: string;
+}
+
+// E-commerce Calculation Types
+export interface OrderCalculation {
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  total: number;
+  items: Array<{
+    productId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    lineTotal: number;
+    inStock: boolean;
+  }>;
+}
+
+// E-commerce Analytics Types
+export interface RevenueStats {
+  totalRevenue: number;
+  totalOrders: number;
+  averageOrderValue: number;
+  period: {
+    start: string;
+    end: string;
+  };
+  trend: {
+    revenue: number; // % change
+    orders: number; // % change
+  };
+}
+
+export interface ProductStats {
+  productId: string;
+  name: string;
+  totalSold: number;
+  revenue: number;
+}
+
+export interface OrderStats {
+  pending: number;
+  processing: number;
+  shipped: number;
+  delivered: number;
+  cancelled: number;
+  averageOrderValue: number;
 }
 
 // ============================================================================
