@@ -45,8 +45,9 @@ export class VlibeBaseEcommerce {
       stock: input.stock,
       isActive: input.isActive ?? true,
       category: input.category,
-      createdAt: now,
-      updatedAt: now,
+      metadata: input.metadata,
+      created_at: now,
+      updated_at: now,
     };
 
     await this.db.insert('products', product);
@@ -66,7 +67,7 @@ export class VlibeBaseEcommerce {
       ...existing,
       ...updates,
       id: productId, // Ensure ID doesn't change
-      updatedAt: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     await this.db.update('products', productId, updated);
@@ -86,7 +87,7 @@ export class VlibeBaseEcommerce {
   async listProducts(options?: {
     category?: string;
     isActive?: boolean;
-    sortBy?: 'name' | 'price' | 'stock' | 'createdAt';
+    sortBy?: 'name' | 'price' | 'stock' | 'created_at';
     limit?: number;
     offset?: number;
   }): Promise<{ products: Product[]; total: number }> {
@@ -99,11 +100,10 @@ export class VlibeBaseEcommerce {
       where.isActive = options.isActive;
     }
 
-    const orderBy = options?.sortBy ? { [options.sortBy]: 'asc' as const } : undefined;
-
     const products = await this.db.query<Product>('products', {
       where,
-      orderBy,
+      orderBy: options?.sortBy,
+      orderDirection: 'asc',
       limit: options?.limit,
       offset: options?.offset,
     });
@@ -269,8 +269,8 @@ export class VlibeBaseEcommerce {
       billingAddress: input.billingAddress,
       paymentMethodId: input.paymentMethodId,
       notes: input.notes,
-      createdAt: now,
-      updatedAt: now,
+      created_at: now,
+      updated_at: now,
     };
 
     // Insert order
@@ -283,7 +283,7 @@ export class VlibeBaseEcommerce {
         orderId: order.id,
         ...item,
         lineTotal: item.price * item.quantity,
-        createdAt: now,
+        created_at: now,
       });
     }
 
@@ -327,7 +327,7 @@ export class VlibeBaseEcommerce {
   async listOrders(options?: {
     userId?: string;
     status?: Order['status'];
-    sortBy?: 'createdAt' | 'total';
+    sortBy?: 'created_at' | 'total';
     limit?: number;
     offset?: number;
   }): Promise<{ orders: Order[]; total: number }> {
@@ -340,11 +340,10 @@ export class VlibeBaseEcommerce {
       where.status = options.status;
     }
 
-    const orderBy = options?.sortBy ? { [options.sortBy]: 'desc' as const } : { createdAt: 'desc' as const };
-
     const orders = await this.db.query<Order>('orders', {
       where,
-      orderBy,
+      orderBy: options?.sortBy || 'created_at',
+      orderDirection: 'desc',
       limit: options?.limit,
       offset: options?.offset,
     });
@@ -379,7 +378,7 @@ export class VlibeBaseEcommerce {
     const updated = {
       ...order,
       status,
-      updatedAt: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     await this.db.update('orders', orderId, updated);
@@ -432,7 +431,7 @@ export class VlibeBaseEcommerce {
       await this.db.update('carts', existing.id, {
         ...existing,
         quantity: existing.quantity + item.quantity,
-        updatedAt: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       });
     } else {
       // Add new item
@@ -441,8 +440,8 @@ export class VlibeBaseEcommerce {
         userId,
         productId: item.productId,
         quantity: item.quantity,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       });
     }
 
@@ -471,7 +470,7 @@ export class VlibeBaseEcommerce {
       await this.db.update('carts', item.id, {
         ...item,
         quantity,
-        updatedAt: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       });
     }
 
@@ -541,10 +540,10 @@ export class VlibeBaseEcommerce {
 
     // Get orders in current period
     const orders = await this.db.query<Order>('orders', {});
-    const currentOrders = orders.filter(o => new Date(o.createdAt) >= periodStart);
+    const currentOrders = orders.filter(o => new Date(o.created_at) >= periodStart);
     const previousOrders = orders.filter(o =>
-      new Date(o.createdAt) >= previousPeriodStart &&
-      new Date(o.createdAt) < periodStart
+      new Date(o.created_at) >= previousPeriodStart &&
+      new Date(o.created_at) < periodStart
     );
 
     const totalRevenue = currentOrders.reduce((sum, o) => sum + o.total, 0);
@@ -586,7 +585,7 @@ export class VlibeBaseEcommerce {
     let filteredOrders = orders;
     if (period) {
       const periodStart = this.getPeriodStart(new Date(), period);
-      filteredOrders = orders.filter(o => new Date(o.createdAt) >= periodStart);
+      filteredOrders = orders.filter(o => new Date(o.created_at) >= periodStart);
     }
 
     // Aggregate by product

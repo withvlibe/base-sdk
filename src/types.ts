@@ -286,8 +286,7 @@ export interface UsageMetric {
 }
 
 // E-commerce Category
-export interface Product {
-  id: string;
+export interface Product extends BaseRecord {
   name: string;
   description?: string;
   sku?: string;
@@ -297,12 +296,10 @@ export interface Product {
   stock: number;
   isActive: boolean;
   category?: string;
-  createdAt: string;
-  updatedAt: string;
+  metadata?: Record<string, any>;
 }
 
-export interface Order {
-  id: string;
+export interface Order extends BaseRecord {
   userId: string;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   items: OrderItem[];
@@ -315,8 +312,6 @@ export interface Order {
   paymentMethodId?: string;
   stripePaymentIntentId?: string;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface OrderItem {
