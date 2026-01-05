@@ -335,6 +335,13 @@ export interface CartItem {
   quantity: number;
 }
 
+export interface CartItemWithProduct {
+  productId: string;
+  quantity: number;
+  product: Product;
+  lineTotal: number;
+}
+
 // E-commerce Input Types
 export interface CreateProductInput {
   name: string;

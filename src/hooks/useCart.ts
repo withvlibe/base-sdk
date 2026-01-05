@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { VlibeBaseEcommerce } from '../VlibeBaseEcommerce';
-import type { CartItem, Address, Order } from '../types';
+import type { CartItem, CartItemWithProduct, Address, Order } from '../types';
 
 export interface UseCartReturn {
   cart: CartItem[];
@@ -14,6 +14,7 @@ export interface UseCartReturn {
   clear: () => Promise<void>;
   checkout: (shippingAddress: Address, paymentMethodId?: string) => Promise<Order>;
   calculateTotal: () => Promise<any>;
+  getCartWithDetails: () => Promise<CartItemWithProduct[]>;
 }
 
 /**
@@ -97,6 +98,10 @@ export function useCart(ecommerce: VlibeBaseEcommerce, userId: string): UseCartR
     return ecommerce.calculateOrderTotal(cart);
   }, [ecommerce, cart]);
 
+  const getCartWithDetails = useCallback(async () => {
+    return ecommerce.getCartWithDetails(userId);
+  }, [ecommerce, userId]);
+
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return {
@@ -111,5 +116,6 @@ export function useCart(ecommerce: VlibeBaseEcommerce, userId: string): UseCartR
     clear,
     checkout,
     calculateTotal,
+    getCartWithDetails,
   };
 }

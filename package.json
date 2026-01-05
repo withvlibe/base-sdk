@@ -1,6 +1,6 @@
 {
   "name": "@withvlibe/base-sdk",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "SDK for Vlibe Base Apps - includes authentication, database, payments with transaction fees, and category-specific helpers for websites, SaaS, and e-commerce",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

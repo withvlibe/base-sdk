@@ -58,6 +58,7 @@ export type {
   Product,
   Order,
   CartItem,
+  CartItemWithProduct,
   CreateProductInput,
   CreateOrderInput,
 } from './types';

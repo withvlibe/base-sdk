@@ -93,6 +93,7 @@ export type {
   OrderItem,
   Address,
   CartItem,
+  CartItemWithProduct,
   // E-commerce input types
   CreateProductInput,
   CreateOrderInput,

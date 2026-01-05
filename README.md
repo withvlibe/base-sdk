@@ -309,6 +309,290 @@ const products = await db.query<Product>('products', { where: { isActive: true }
 const orders = await db.query<Order>('orders', { where: { userId: user.id } });
 ```
 
+## E-Commerce
+
+The SDK provides specialized e-commerce functionality through `VlibeBaseEcommerce`.
+
+### Setup
+
+```typescript
+import { VlibeBaseEcommerce } from '@withvlibe/base-sdk';
+
+// Initialize with database client
+export const ecommerce = new VlibeBaseEcommerce(db);
+```
+
+### Products
+
+```typescript
+// Create a product
+const product = await ecommerce.createProduct({
+  name: 'Premium T-Shirt',
+  description: 'High-quality cotton t-shirt',
+  price: 2999, // $29.99 in cents
+  currency: 'usd',
+  stock: 100,
+  images: ['https://example.com/tshirt.jpg'],
+  category: 'apparel',
+  isActive: true,
+});
+
+// List products
+const { products, total } = await ecommerce.listProducts({
+  category: 'apparel',
+  isActive: true,
+  sortBy: 'created_at',
+  limit: 20,
+});
+
+// Update inventory
+await ecommerce.updateInventory(productId, 50, 'set');
+await ecommerce.updateInventory(productId, 5, 'increment');
+await ecommerce.updateInventory(productId, 3, 'decrement');
+
+// Get low stock products
+const lowStock = await ecommerce.getLowStockProducts(10); // threshold: 10
+```
+
+### Shopping Cart
+
+```typescript
+// Add to cart
+await ecommerce.addToCart(userId, {
+  productId: 'product-123',
+  quantity: 2,
+});
+
+// Get cart (lightweight - only IDs and quantities)
+const cart = await ecommerce.getCart(userId);
+// Returns: [{ productId: '...', quantity: 2 }]
+
+// Get cart with full product details
+const detailedCart = await ecommerce.getCartWithDetails(userId);
+// Returns: [{ productId: '...', quantity: 2, product: {...}, lineTotal: 5998 }]
+
+// Update quantity
+await ecommerce.updateCartItem(userId, productId, 5);
+
+// Remove item (set quantity to 0)
+await ecommerce.updateCartItem(userId, productId, 0);
+
+// Calculate order totals
+const calculation = await ecommerce.calculateOrderTotal(cart);
+console.log('Subtotal:', calculation.subtotal);
+console.log('Tax:', calculation.tax);
+console.log('Shipping:', calculation.shipping);
+console.log('Total:', calculation.total);
+
+// Checkout (creates order and clears cart)
+const order = await ecommerce.checkout(userId, {
+  line1: '123 Main St',
+  city: 'San Francisco',
+  state: 'CA',
+  postalCode: '94102',
+  country: 'US',
+}, paymentMethodId);
+```
+
+### Orders
+
+```typescript
+// Create an order directly
+const order = await ecommerce.createOrder({
+  userId: 'user-123',
+  items: [
+    { productId: 'product-1', quantity: 2 },
+    { productId: 'product-2', quantity: 1 },
+  ],
+  shippingAddress: {
+    line1: '123 Main St',
+    city: 'San Francisco',
+    state: 'CA',
+    postalCode: '94102',
+    country: 'US',
+  },
+});
+
+// List orders
+const { orders, total } = await ecommerce.listOrders({
+  userId: 'user-123',
+  status: 'pending',
+  limit: 10,
+});
+
+// Update order status
+await ecommerce.updateOrderStatus(orderId, 'shipped');
+
+// Cancel order (optionally restore inventory)
+await ecommerce.cancelOrder(orderId, true);
+```
+
+### Analytics
+
+```typescript
+// Revenue stats
+const stats = await ecommerce.getRevenueStats('month');
+console.log('Revenue:', stats.totalRevenue);
+console.log('Orders:', stats.totalOrders);
+console.log('AOV:', stats.averageOrderValue);
+console.log('Trend:', stats.trend.revenue); // % change
+
+// Top products
+const topProducts = await ecommerce.getTopProducts(10, 'week');
+
+// Order statistics
+const orderStats = await ecommerce.getOrderStats();
+console.log('Pending:', orderStats.pending);
+console.log('Delivered:', orderStats.delivered);
+```
+
+### React Hooks for E-Commerce
+
+```tsx
+import { useProducts, useCart, useOrders } from '@withvlibe/base-sdk/react';
+
+function ProductList() {
+  const { products, loading, createProduct, updateProduct } = useProducts(ecommerce, {
+    category: 'apparel',
+    isActive: true,
+  });
+
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <div>
+      {products.map(product => (
+        <div key={product.id}>
+          <h3>{product.name}</h3>
+          <p>${(product.price / 100).toFixed(2)}</p>
+          <p>Stock: {product.stock}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ShoppingCart({ userId }: { userId: string }) {
+  const { cart, itemCount, addItem, updateItem, removeItem, checkout, getCartWithDetails } = useCart(ecommerce, userId);
+  const [detailedItems, setDetailedItems] = useState([]);
+
+  useEffect(() => {
+    // Load cart with product details
+    const loadDetails = async () => {
+      const items = await getCartWithDetails();
+      setDetailedItems(items);
+    };
+    loadDetails();
+  }, [getCartWithDetails]);
+
+  return (
+    <div>
+      <h2>Cart ({itemCount} items)</h2>
+      {detailedItems.map(item => (
+        <div key={item.productId}>
+          <h3>{item.product.name}</h3>
+          <p>${(item.product.price / 100).toFixed(2)} x {item.quantity}</p>
+          <p>Subtotal: ${(item.lineTotal / 100).toFixed(2)}</p>
+          <button onClick={() => updateItem(item.productId, item.quantity + 1)}>+</button>
+          <button onClick={() => updateItem(item.productId, item.quantity - 1)}>-</button>
+          <button onClick={() => removeItem(item.productId)}>Remove</button>
+        </div>
+      ))}
+      <button onClick={() => checkout(shippingAddress)}>Checkout</button>
+    </div>
+  );
+}
+
+function OrderHistory({ userId }: { userId: string }) {
+  const { orders, loading, updateStatus, cancelOrder } = useOrders(ecommerce, { userId });
+
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <div>
+      {orders.map(order => (
+        <div key={order.id}>
+          <h3>Order #{order.id}</h3>
+          <p>Status: {order.status}</p>
+          <p>Total: ${(order.total / 100).toFixed(2)}</p>
+          <ul>
+            {order.items.map(item => (
+              <li key={item.productId}>
+                {item.name} x {item.quantity} - ${(item.price / 100).toFixed(2)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Database Schema
+
+Create these tables in your database:
+
+```typescript
+// Products table
+interface ProductRow {
+  id: string;
+  name: string;
+  description?: string;
+  sku?: string;
+  price: number; // cents
+  currency: string;
+  images: string[]; // JSON array
+  stock: number;
+  isActive: boolean;
+  category?: string;
+  metadata?: Record<string, any>; // JSON
+  created_at: string;
+  updated_at: string;
+}
+
+// Orders table
+interface OrderRow {
+  id: string;
+  userId: string;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  items: OrderItem[]; // JSON array
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  total: number;
+  shippingAddress: Address; // JSON
+  billingAddress?: Address; // JSON
+  paymentMethodId?: string;
+  stripePaymentIntentId?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Order Items table (for queries)
+interface OrderItemRow {
+  id: string;
+  orderId: string;
+  productId: string;
+  name: string;
+  quantity: number;
+  price: number;
+  lineTotal: number;
+  created_at: string;
+}
+
+// Carts table
+interface CartRow {
+  id: string;
+  userId: string;
+  productId: string;
+  quantity: number;
+  created_at: string;
+  updated_at: string;
+}
+```
+
 ## API Reference
 
 ### VlibeBaseDatabase

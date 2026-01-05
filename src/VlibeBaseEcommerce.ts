@@ -4,6 +4,7 @@ import type {
   Order,
   OrderItem,
   CartItem,
+  CartItemWithProduct,
   Address,
   CreateProductInput,
   CreateOrderInput,
@@ -489,6 +490,31 @@ export class VlibeBaseEcommerce {
       productId: item.productId,
       quantity: item.quantity,
     }));
+  }
+
+  /**
+   * Get user's cart with full product details
+   */
+  async getCartWithDetails(userId: string): Promise<CartItemWithProduct[]> {
+    const cart = await this.getCart(userId);
+
+    const enriched: CartItemWithProduct[] = [];
+
+    for (const item of cart) {
+      const product = await this.getProduct(item.productId);
+      if (!product) {
+        throw new Error(`Product not found: ${item.productId}`);
+      }
+
+      enriched.push({
+        productId: item.productId,
+        quantity: item.quantity,
+        product,
+        lineTotal: product.price * item.quantity,
+      });
+    }
+
+    return enriched;
   }
 
   /**
